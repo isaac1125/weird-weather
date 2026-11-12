@@ -480,10 +480,6 @@ body[data-period="night"] .status-chip {
   line-height: 1.2;
 }
 
-.support__value--sm {
-  font-size: 0.92rem;
-}
-
 .cues {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
