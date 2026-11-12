@@ -47,76 +47,52 @@
       </header>
 
       <main class="main">
-        <section class="hero-metrics" aria-label="目前天氣與空氣品質">
-          <div class="metric metric--temp">
-            <p class="metric__label">現在天氣</p>
-            <p class="metric__value">
-              <span id="current-temp">--</span><span class="unit">°</span>
-            </p>
-            <p class="metric__sub">
-              體感 <span id="feels-like">--</span>°
-            </p>
-          </div>
-          <div class="metric metric--aqi">
-            <p class="metric__label">空氣品質</p>
-            <p class="metric__value metric__value--sm">
-              <span id="aqi-value">--</span>
-            </p>
-            <p class="metric__sub">
-              <span class="pill" id="aqi-label">—</span>
-              PM2.5 <span id="pm25-value">--</span>
-            </p>
-          </div>
+        <section class="outfit-hero" aria-label="今日穿搭建議">
+          <p class="outfit-hero__period" id="period-label">現在 · 白天</p>
+          <div class="outfit-hero__stack" id="outfit-stack" aria-live="polite"></div>
+          <h1 class="outfit-hero__title" id="outfit-title">—</h1>
+          <p class="outfit-hero__reason" id="outfit-reason">讀取穿搭建議…</p>
+          <p class="outfit-hero__peek" id="period-peek"></p>
         </section>
 
-        <section class="period" aria-label="白天與夜間穿搭建議">
-          <div class="period__tabs" role="tablist">
-            <button
-              class="period__tab is-active"
-              role="tab"
-              aria-selected="true"
-              data-period="day"
-              id="tab-day"
-            >
-              今天白天
-            </button>
-            <button
-              class="period__tab"
-              role="tab"
-              aria-selected="false"
-              data-period="night"
-              id="tab-night"
-            >
-              今天晚上
-            </button>
-          </div>
-
-          <div class="period__panel" id="period-panel">
-            <div class="period__weather">
-              <div class="period__icon" id="period-icon" aria-hidden="true"></div>
-              <div class="period__meta">
-                <p class="period__range">
-                  <span id="period-low">--</span>° ~
-                  <span id="period-high">--</span>°
-                </p>
-                <p class="period__desc" id="period-desc">—</p>
-              </div>
-              <div class="rain-badge" title="降雨機率">
-                <span id="period-rain">--</span>%
-              </div>
+        <section class="support" aria-label="輔助天氣資訊">
+          <div class="support__weather">
+            <div class="support__cell">
+              <span class="support__label">現在</span>
+              <span class="support__value"
+                ><span id="current-temp">--</span>°</span
+              >
             </div>
-
-            <div class="advice" id="advice-row" aria-label="穿搭與生活建議"></div>
+            <div class="support__cell">
+              <span class="support__label">體感</span>
+              <span class="support__value"
+                ><span id="feels-like">--</span>°</span
+              >
+            </div>
+            <div class="support__cell">
+              <span class="support__label">降雨</span>
+              <span class="support__value"
+                ><span id="period-rain">--</span>%</span
+              >
+            </div>
+            <div class="support__cell support__cell--range">
+              <span class="support__label" id="period-range-label">時段</span>
+              <span class="support__value support__value--sm">
+                <span id="period-low">--</span>° ~
+                <span id="period-high">--</span>°
+              </span>
+            </div>
           </div>
+          <div class="cues" id="cue-row" aria-label="穿搭相關提醒"></div>
         </section>
 
-        <section class="hourly" aria-label="三小時預報">
-          <div class="section-head">
-            <h2>三小時預報</h2>
-            <p>氣溫走勢與降雨機率</p>
-          </div>
+        <details class="hourly" id="hourly-details">
+          <summary>
+            <span>三小時走勢</span>
+            <span class="hourly__hint">氣溫 · 降雨</span>
+          </summary>
           <div class="hourly__scroll" id="hourly-list"></div>
-        </section>
+        </details>
       </main>
 
       <footer class="foot">

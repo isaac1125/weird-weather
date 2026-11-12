@@ -132,7 +132,7 @@ export async function fetchWeatherBundle(lat, lon) {
   );
   weatherUrl.searchParams.set(
     "daily",
-    "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max"
+    "weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_speed_10m_max,sunrise,sunset"
   );
 
   const airUrl = new URL(AIR_URL);
@@ -169,6 +169,13 @@ export async function fetchWeatherBundle(lat, lon) {
     weatherCode: night.weatherCode,
   };
 
+  const dailyHigh = Math.round(weather.daily?.temperature_2m_max?.[0] ?? day.high);
+  const dailyLow = Math.round(
+    weather.daily?.temperature_2m_min?.[0] ?? Math.min(day.low, nightMerged.low)
+  );
+  const sunrise = weather.daily?.sunrise?.[0] ?? null;
+  const sunset = weather.daily?.sunset?.[0] ?? null;
+
   return {
     current: {
       temp: round1(weather.current.temperature_2m),
@@ -180,6 +187,13 @@ export async function fetchWeatherBundle(lat, lon) {
     pm25,
     day: { ...day, aqi },
     night: { ...nightMerged, aqi },
+    daily: {
+      high: dailyHigh,
+      low: dailyLow,
+      swing: Math.max(0, dailyHigh - dailyLow),
+      sunrise,
+      sunset,
+    },
     hourly: buildHourlyBrief(hourly),
     source: "live",
   };
@@ -205,6 +219,9 @@ export function sampleBundle() {
     });
   }
 
+  const y = now.getFullYear();
+  const m = pad(now.getMonth() + 1);
+  const d = pad(now.getDate());
   return {
     current: { temp: 22.3, feelsLike: 21, code: 2, windKmh: 18 },
     aqi: 51,
@@ -225,9 +242,45 @@ export function sampleBundle() {
       weatherCode: 61,
       aqi: 51,
     },
+    daily: {
+      high: 23,
+      low: 14,
+      swing: 9,
+      sunrise: `${y}-${m}-${d}T06:05`,
+      sunset: `${y}-${m}-${d}T17:28`,
+    },
     hourly: hours,
     source: "sample",
   };
+}
+
+/**
+ * Pick day vs night from local clock, preferring today's sunrise/sunset when present.
+ * Fallback: ~06–18 day, otherwise night (Asia/Taipei).
+ */
+export function resolveActivePeriod(daily, now = new Date()) {
+  const taipeiHour = Number(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Taipei",
+      hour: "2-digit",
+      hour12: false,
+    }).format(now)
+  );
+
+  if (daily?.sunrise && daily?.sunset) {
+    try {
+      const sunriseMs = parseTaipeiLocal(daily.sunrise).getTime();
+      const sunsetMs = parseTaipeiLocal(daily.sunset).getTime();
+      const nowMs = now.getTime();
+      if (Number.isFinite(sunriseMs) && Number.isFinite(sunsetMs)) {
+        return nowMs >= sunriseMs && nowMs < sunsetMs ? "day" : "night";
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+
+  return taipeiHour >= 6 && taipeiHour < 18 ? "day" : "night";
 }
 
 export function getPosition() {
