@@ -9,7 +9,6 @@ import {
   iconUmbrella,
   iconWind,
   weatherIcon,
-  weatherLabel,
 } from "./icons.js";
 import {
   defaultPlace,
@@ -19,9 +18,9 @@ import {
   searchPlaces,
 } from "./places.js";
 import {
-  aqiLabel,
   fetchWeatherBundle,
   getPosition,
+  resolveActivePeriod,
   reverseGeocode,
   sampleBundle,
 } from "./weather.js";
@@ -33,17 +32,17 @@ const els = {
   status: document.getElementById("data-status"),
   temp: document.getElementById("current-temp"),
   feels: document.getElementById("feels-like"),
-  aqi: document.getElementById("aqi-value"),
-  aqiLabel: document.getElementById("aqi-label"),
-  pm25: document.getElementById("pm25-value"),
-  periodIcon: document.getElementById("period-icon"),
+  periodLabel: document.getElementById("period-label"),
+  outfitStack: document.getElementById("outfit-stack"),
+  outfitTitle: document.getElementById("outfit-title"),
+  outfitReason: document.getElementById("outfit-reason"),
+  periodPeek: document.getElementById("period-peek"),
   periodLow: document.getElementById("period-low"),
   periodHigh: document.getElementById("period-high"),
-  periodDesc: document.getElementById("period-desc"),
+  periodRangeLabel: document.getElementById("period-range-label"),
   periodRain: document.getElementById("period-rain"),
-  advice: document.getElementById("advice-row"),
+  cues: document.getElementById("cue-row"),
   hourly: document.getElementById("hourly-list"),
-  tabs: document.querySelectorAll(".period__tab"),
   sheet: document.getElementById("place-sheet"),
   backdrop: document.getElementById("place-backdrop"),
   close: document.getElementById("place-close"),
@@ -89,68 +88,94 @@ function formatHourLabel(iso) {
   return `${h}:00`;
 }
 
-function renderAdvice(periodKey) {
-  const period = state.bundle[periodKey];
-  const night = periodKey === "night";
-  const advice = buildAdviceRow(period, { isNight: night });
+function syncActivePeriod() {
+  state.period = resolveActivePeriod(state.bundle.daily);
+  document.body.dataset.period = state.period;
+}
 
-  els.periodIcon.innerHTML = weatherIcon(period.weatherCode, { night });
+function renderOutfit(periodKey) {
+  const period = state.bundle[periodKey];
+  const otherKey = periodKey === "day" ? "night" : "day";
+  const night = periodKey === "night";
+  const daySwing = state.bundle.daily?.swing;
+  const advice = buildAdviceRow(period, { isNight: night, daySwing });
+  const otherAdvice = buildAdviceRow(state.bundle[otherKey], {
+    isNight: otherKey === "night",
+    daySwing,
+  });
+
+  els.periodLabel.textContent = night ? "現在 · 晚上" : "現在 · 白天";
+  els.periodRangeLabel.textContent = night ? "夜間" : "白天";
   els.periodLow.textContent = String(period.low);
   els.periodHigh.textContent = String(period.high);
-  els.periodDesc.textContent = weatherLabel(period.weatherCode);
   els.periodRain.textContent = String(period.popPct);
 
-  const items = [
-    ...advice.clothes.map((c) => ({
-      label: c.label,
-      tone: c.tone,
-      svg: clothingGlyph(c.key),
-      badge: null,
-    })),
+  els.outfitTitle.textContent = advice.headline;
+  els.outfitReason.textContent = advice.reason;
+
+  const layers = advice.clothes
+    .map(
+      (c, index) => `
+      <div class="outfit-layer" data-tone="${c.tone}" style="--i:${index}">
+        <div class="outfit-layer__glyph">${clothingGlyph(c.key)}</div>
+        <p class="outfit-layer__label">${c.label}</p>
+      </div>
+      ${
+        index < advice.clothes.length - 1
+          ? '<span class="outfit-plus" aria-hidden="true">＋</span>'
+          : ""
+      }`
+    )
+    .join("");
+
+  els.outfitStack.innerHTML = `
+    <div class="outfit-stack__weather" aria-hidden="true">
+      ${weatherIcon(period.weatherCode, { night })}
+    </div>
+    <div class="outfit-stack__layers">${layers}</div>
+  `;
+
+  els.periodPeek.textContent = night
+    ? `白天可改：${otherAdvice.headline}`
+    : `晚上可改：${otherAdvice.headline}`;
+
+  const cues = [
     {
       label: advice.condition.label,
       tone: advice.condition.tone === "warn" ? "cool" : advice.condition.tone,
       svg: conditionGlyph(advice.condition.key),
-      badge: null,
     },
-    {
-      label: advice.laundry.label,
-      tone: advice.laundry.tone,
-      svg: iconLaundry(),
-      badge: advice.laundry.ok ? "✓" : "!",
-      badgeNo: !advice.laundry.ok,
-    },
-    {
-      label: advice.exercise.label,
-      tone: advice.exercise.tone === "warn" ? "warm" : advice.exercise.tone,
-      svg: iconRun(),
-      badge: advice.exercise.ok ? "✓" : "!",
-      badgeNo: !advice.exercise.ok,
-    },
-  ].slice(0, 5);
+    night
+      ? {
+          label: advice.exercise.label,
+          tone: advice.exercise.tone === "warn" ? "warm" : advice.exercise.tone,
+          svg: iconRun(),
+          badge: advice.exercise.ok ? "✓" : "!",
+          badgeNo: !advice.exercise.ok,
+        }
+      : {
+          label: advice.laundry.label,
+          tone: advice.laundry.tone,
+          svg: iconLaundry(),
+          badge: advice.laundry.ok ? "✓" : "!",
+          badgeNo: !advice.laundry.ok,
+        },
+  ];
 
-  while (items.length < 5) {
-    items.splice(2, 0, {
-      label: "風力平穩",
-      tone: "good",
-      svg: iconWind(),
-      badge: null,
-    });
-  }
-
-  els.advice.innerHTML = items
+  els.cues.innerHTML = cues
+    .slice(0, 2)
     .map(
       (item) => `
-      <div class="advice__item">
-        <div class="advice__glyph" data-tone="${item.tone}">
+      <div class="cue">
+        <div class="cue__glyph" data-tone="${item.tone}">
           ${item.svg}
           ${
             item.badge
-              ? `<span class="advice__badge${item.badgeNo ? " is-no" : ""}">${item.badge}</span>`
+              ? `<span class="cue__badge${item.badgeNo ? " is-no" : ""}">${item.badge}</span>`
               : ""
           }
         </div>
-        <p class="advice__label">${item.label}</p>
+        <p class="cue__label">${item.label}</p>
       </div>`
     )
     .join("");
@@ -173,22 +198,18 @@ function renderHourly() {
 }
 
 function renderMetrics() {
-  const { current, aqi, pm25, source } = state.bundle;
+  const { current, source } = state.bundle;
   els.temp.textContent = String(current.temp);
   els.feels.textContent = String(current.feelsLike);
-  els.aqi.textContent = aqi == null ? "--" : String(aqi);
-  els.pm25.textContent = pm25 == null ? "--" : String(pm25);
-  const label = aqiLabel(aqi);
-  els.aqiLabel.textContent = label.text;
-  els.aqiLabel.dataset.level = label.level === "good" ? "" : label.level;
   els.place.textContent = state.place.name;
   els.status.textContent =
     source === "sample" ? "示範資料（離線備援）" : "即時資料 · Open-Meteo";
 }
 
 function renderAll() {
+  syncActivePeriod();
   renderMetrics();
-  renderAdvice(state.period);
+  renderOutfit(state.period);
   renderHourly();
 }
 
@@ -215,13 +236,12 @@ function renderPlaceList(places) {
   }
   els.list.innerHTML = places
     .map(
-      (place, index) => `
+      (place) => `
       <li>
         <button
           type="button"
           class="place-list__item"
           role="option"
-          data-index="${index}"
           data-name="${place.name}"
           data-lat="${place.latitude}"
           data-lon="${place.longitude}"
@@ -279,19 +299,6 @@ async function useGeolocation() {
     els.geo.disabled = false;
   }
 }
-
-els.tabs.forEach((tab) => {
-  tab.addEventListener("click", () => {
-    const period = tab.dataset.period;
-    state.period = period;
-    els.tabs.forEach((t) => {
-      const active = t.dataset.period === period;
-      t.classList.toggle("is-active", active);
-      t.setAttribute("aria-selected", active ? "true" : "false");
-    });
-    renderAdvice(period);
-  });
-});
 
 els.locationBtn.addEventListener("click", openPlaceSheet);
 els.backdrop.addEventListener("click", closePlaceSheet);

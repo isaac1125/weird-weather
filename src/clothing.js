@@ -34,14 +34,10 @@ export function outfitForTemps(low, high) {
     }
   } else if (avg < 22 && swing >= 6) {
     layers.push({ key: "light", label: "薄外套", tone: "cool" });
-  } else if (avg >= 26 && low >= 24) {
+  } else if (avg >= 26 || (avg >= 24 && low >= 22)) {
     layers.push({ key: "breathable", label: "透氣衣", tone: "warm" });
-  } else if (layers.length === 1) {
-    if (avg >= 24) {
-      layers.push({ key: "tee2", label: "短袖內搭", tone: "warm" });
-    } else {
-      layers.push({ key: "cardigan", label: "薄外套", tone: "cool" });
-    }
+  } else if (layers.length === 1 && avg < 24) {
+    layers.push({ key: "cardigan", label: "薄外套", tone: "cool" });
   }
 
   return layers.slice(0, 2);
@@ -104,10 +100,35 @@ export function exerciseAdvice({ popPct, high, low, windKmh, aqi }) {
   return { ok: true, label: "適合運動", tone: "good" };
 }
 
+/** Join layer labels for the hero headline, e.g. 短袖＋棉外套. */
+export function outfitHeadline(clothes) {
+  return clothes.map((c) => c.label).join("＋");
+}
+
 /**
- * Build the five-slot advice row for a day or night period.
+ * One short human line for diurnal swing + layering tip.
+ * Prefer full-day swing when provided; else fall back to the active period.
  */
-export function buildAdviceRow(period, { isNight = false } = {}) {
+export function swingCopy({ swing, clothes, isNight = false }) {
+  const delta = clamp(Math.round(swing), 0, 40);
+  const outfit = outfitHeadline(clothes);
+  if (delta >= 8) {
+    return isNight
+      ? `早晚差 ${delta}°，晚上記得加 ${clothes[clothes.length - 1]?.label || "外套"}`
+      : `早晚差 ${delta}°，建議 ${outfit}，早晚好脫`;
+  }
+  if (delta >= 5) {
+    return isNight
+      ? `日夜溫差約 ${delta}°，夜間偏涼，維持 ${outfit}`
+      : `日夜溫差約 ${delta}°，建議 ${outfit}`;
+  }
+  return isNight ? `今晚建議 ${outfit}` : `今天建議 ${outfit}`;
+}
+
+/**
+ * Build advice for a day or night period.
+ */
+export function buildAdviceRow(period, { isNight = false, daySwing } = {}) {
   const { low, high, popPct, windKmh, weatherCode, aqi } = period;
   const clothes = outfitForTemps(low, high);
   const rain = rainAdvice(popPct);
@@ -117,12 +138,16 @@ export function buildAdviceRow(period, { isNight = false } = {}) {
     : wind.strong
       ? wind
       : { key: "stable", label: "天氣穩定", tone: "good" };
+  const swing =
+    typeof daySwing === "number" ? daySwing : clamp(high - low, 0, 40);
 
   return {
     clothes,
     condition,
     laundry: laundryAdvice({ popPct, weatherCode, windKmh, high, isNight }),
     exercise: exerciseAdvice({ popPct, high, low, windKmh, aqi }),
-    swing: clamp(high - low, 0, 40),
+    swing,
+    headline: outfitHeadline(clothes),
+    reason: swingCopy({ swing, clothes, isNight }),
   };
 }
