@@ -1,10 +1,9 @@
 import { buildAdviceRow } from "./clothing.js";
 import {
-  iconJacket,
+  clothingIcon,
   iconLaundry,
   iconPin,
   iconRun,
-  iconShirt,
   iconStable,
   iconUmbrella,
   iconWind,
@@ -61,13 +60,6 @@ let state = {
 let searchTimer = null;
 let searchToken = 0;
 
-function clothingGlyph(key) {
-  if (key === "padded" || key === "jacket" || key === "light" || key === "cardigan") {
-    return iconJacket();
-  }
-  return iconShirt();
-}
-
 function conditionGlyph(key) {
   if (key === "wind" || key === "calm") return iconWind();
   if (key === "stable" || key === "dry") return iconStable();
@@ -110,14 +102,15 @@ function renderOutfit(periodKey) {
   els.periodHigh.textContent = String(period.high);
   els.periodRain.textContent = String(period.popPct);
 
+  // Headline lives under icons only; keep a11y text on the hidden h1.
   els.outfitTitle.textContent = advice.headline;
   els.outfitReason.textContent = advice.reason;
 
   const layers = advice.clothes
     .map(
       (c, index) => `
-      <div class="outfit-layer" data-tone="${c.tone}" style="--i:${index}">
-        <div class="outfit-layer__glyph">${clothingGlyph(c.key)}</div>
+      <div class="outfit-layer" data-tone="${c.tone}" data-role="${c.role || ""}" style="--i:${index}">
+        <div class="outfit-layer__glyph">${clothingIcon(c.key)}</div>
         <p class="outfit-layer__label">${c.label}</p>
       </div>
       ${
@@ -132,7 +125,7 @@ function renderOutfit(periodKey) {
     <div class="outfit-stack__weather" aria-hidden="true">
       ${weatherIcon(period.weatherCode, { night })}
     </div>
-    <div class="outfit-stack__layers">${layers}</div>
+    <div class="outfit-stack__layers" data-count="${advice.clothes.length}">${layers}</div>
   `;
 
   els.periodPeek.textContent = night
@@ -228,6 +221,15 @@ function closePlaceSheet() {
   document.body.classList.remove("sheet-open");
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function renderPlaceList(places) {
   if (!places.length) {
     els.list.innerHTML =
@@ -235,21 +237,22 @@ function renderPlaceList(places) {
     return;
   }
   els.list.innerHTML = places
-    .map(
-      (place) => `
+    .map((place) => {
+      const name = escapeHtml(place.name);
+      return `
       <li>
         <button
           type="button"
           class="place-list__item"
           role="option"
-          data-name="${place.name}"
-          data-lat="${place.latitude}"
-          data-lon="${place.longitude}"
+          data-name="${name}"
+          data-lat="${Number(place.latitude)}"
+          data-lon="${Number(place.longitude)}"
         >
-          ${place.name}
+          ${name}
         </button>
-      </li>`
-    )
+      </li>`;
+    })
     .join("");
 }
 
@@ -339,6 +342,47 @@ document.addEventListener("keydown", (event) => {
 async function boot() {
   els.locationPin.innerHTML = iconPin();
   els.geoIcon.innerHTML = iconPin();
+
+  // Dev/demo: ?demo=cold forces sample cold night stack (發熱衣＋厚長袖＋棉外套)
+  const demo = new URLSearchParams(location.search).get("demo");
+  if (demo === "cold") {
+    state.bundle = sampleBundle();
+    state.period = "night";
+    document.body.dataset.period = "night";
+    renderMetrics();
+    renderOutfit("night");
+    renderHourly();
+    els.status.textContent = "示範資料（冷天預覽）";
+    return;
+  }
+  if (demo === "freezing") {
+    state.bundle = sampleBundle();
+    state.bundle.day = {
+      low: 2,
+      high: 8,
+      popPct: 10,
+      windKmh: 25,
+      weatherCode: 2,
+      aqi: 40,
+    };
+    state.bundle.night = {
+      low: 1,
+      high: 5,
+      popPct: 20,
+      windKmh: 28,
+      weatherCode: 3,
+      aqi: 40,
+    };
+    state.bundle.daily = { ...state.bundle.daily, high: 8, low: 1, swing: 7 };
+    state.period = "night";
+    document.body.dataset.period = "night";
+    renderMetrics();
+    renderOutfit("night");
+    renderHourly();
+    els.status.textContent = "示範資料（羽絨預覽）";
+    return;
+  }
+
   renderAll();
 
   const saved = loadSavedPlace();

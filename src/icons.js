@@ -1,13 +1,24 @@
 /**
- * Colored emoji icons via Twemoji (CC-BY 4.0) — transparent PNG CDN assets.
+ * Weather/cue icons: Twemoji (CC-BY 4.0).
+ * Clothing layers: hybrid — Twemoji where the emoji fits, open SVG
+ * (Lucide Lab / Hugeicons / Tabler, MIT/ISC) for thermal & long sleeves.
  * https://github.com/jdecked/twemoji
  */
+
+import jacketUrl from "./assets/clothing/jacket.svg";
+import longUrl from "./assets/clothing/long.svg";
+import thermalUrl from "./assets/clothing/thermal.svg";
+import thickUrl from "./assets/clothing/thick.svg";
 
 const TWEMOJI_BASE =
   "https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72";
 
 function emojiImg(code, alt = "") {
   return `<img class="emoji-icon" src="${TWEMOJI_BASE}/${code}.png" alt="${alt}" width="72" height="72" decoding="async" draggable="false" />`;
+}
+
+function assetImg(url, alt = "") {
+  return `<img class="emoji-icon clothing-svg" src="${url}" alt="${alt}" width="72" height="72" decoding="async" draggable="false" />`;
 }
 
 export function iconSun() {
@@ -39,11 +50,70 @@ export function iconThunder() {
 }
 
 export function iconShirt() {
-  return emojiImg("1f455", "上衣");
+  return emojiImg("1f455", "短袖");
+}
+
+/** 發熱衣 — Hugeicons long-sleeve shirt (MIT). */
+export function iconThermal() {
+  return assetImg(thermalUrl, "發熱衣");
+}
+
+/** 薄長袖 — Lucide Lab shirt-long-sleeve (ISC). */
+export function iconLongSleeve() {
+  return assetImg(longUrl, "薄長袖");
+}
+
+/** 厚長袖 — Lucide Lab sweater (ISC). */
+export function iconThickTop() {
+  return assetImg(thickUrl, "厚長袖");
+}
+
+/** 薄外套 — Tabler jacket (MIT). */
+export function iconLightOuter() {
+  return assetImg(jacketUrl, "薄外套");
 }
 
 export function iconJacket() {
-  return emojiImg("1f9e5", "外套");
+  return emojiImg("1f9e5", "棉外套");
+}
+
+/** 羽絨外套 — Twemoji coat + frost badge. */
+export function iconDown() {
+  return `${emojiImg("1f9e5", "羽絨外套")}<span class="emoji-badge" aria-hidden="true">${emojiImg("2744", "")}</span>`;
+}
+
+/**
+ * Map clothing engine keys → icons (hybrid).
+ * thermal  發熱衣   → Hugeicons long-sleeve SVG
+ * tee      短袖     → 👕 Twemoji 1f455
+ * breathable 透氣衣 → 👕 Twemoji 1f455
+ * long     薄長袖   → Lucide Lab shirt-long-sleeve SVG
+ * thick    厚長袖   → Lucide Lab sweater SVG
+ * jacket / light / cardigan 薄外套 → Tabler jacket SVG
+ * padded   棉外套   → 🧥 Twemoji 1f9e5
+ * down     羽絨外套 → 🧥 Twemoji 1f9e5 + ❄️ 2744 badge
+ */
+export function clothingIcon(key) {
+  switch (key) {
+    case "thermal":
+      return iconThermal();
+    case "long":
+      return iconLongSleeve();
+    case "thick":
+      return iconThickTop();
+    case "jacket":
+    case "light":
+    case "cardigan":
+      return iconLightOuter();
+    case "padded":
+      return iconJacket();
+    case "down":
+      return iconDown();
+    case "tee":
+    case "breathable":
+    default:
+      return iconShirt();
+  }
 }
 
 export function iconUmbrella() {

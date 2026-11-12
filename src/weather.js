@@ -69,12 +69,10 @@ function parseTaipeiLocal(iso) {
   return new Date(`${normalized}+08:00`);
 }
 
-function buildHourlyBrief(hourly, limit = 6) {
+function buildHourlyBrief(hourly, limit = 12) {
   const now = Date.now();
   const items = [];
   for (let i = 0; i < hourly.time.length; i++) {
-    const hour = Number(hourly.time[i].slice(11, 13));
-    if (hour % 3 !== 0) continue;
     const t = parseTaipeiLocal(hourly.time[i]).getTime();
     if (t + 60 * 60 * 1000 < now) continue;
     items.push({
@@ -110,7 +108,17 @@ export async function reverseGeocode(lat, lon) {
       ? data.locality
       : data.localityInfo?.administrative?.find((a) => a.adminLevel >= 6)?.name ||
         "";
-  const parts = [city, district].filter(Boolean);
+  const parts = [city, district]
+    .filter(Boolean)
+    .map((p) =>
+      String(p)
+        .replace(/台/g, "臺")
+        .replace(/湾/g, "灣")
+        .replace(/[台臺]灣省/g, "")
+        .replace(/中國?臺[北灣]/g, "")
+        .replace(/\s+/g, "")
+    )
+    .filter((p) => p && !/^[台臺]灣省$/.test(p));
   const unique = [...new Set(parts)];
   const label = unique.join("");
   return label || FALLBACK_PLACE.name;
@@ -204,15 +212,13 @@ export function sampleBundle() {
   const now = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   const hours = [];
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getTime() + i * 3 * 3600 * 1000);
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getTime() + i * 3600 * 1000);
     const h = d.getHours();
     const temp =
       h < 6 ? 15 : h < 10 ? 18 : h < 15 ? 23 : h < 19 ? 20 : 16;
     hours.push({
-      time: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-        Math.floor(h / 3) * 3
-      )}:00`,
+      time: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(h)}:00`,
       temp,
       pop: h >= 18 ? 40 : 10,
       code: h >= 18 ? 61 : 2,
@@ -227,25 +233,25 @@ export function sampleBundle() {
     aqi: 51,
     pm25: 9,
     day: {
-      low: 14,
-      high: 23,
+      low: 12,
+      high: 22,
       popPct: 10,
       windKmh: 32,
       weatherCode: 2,
       aqi: 51,
     },
     night: {
-      low: 14,
-      high: 18,
+      low: 8,
+      high: 14,
       popPct: 70,
       windKmh: 20,
       weatherCode: 61,
       aqi: 51,
     },
     daily: {
-      high: 23,
-      low: 14,
-      swing: 9,
+      high: 22,
+      low: 8,
+      swing: 14,
       sunrise: `${y}-${m}-${d}T06:05`,
       sunset: `${y}-${m}-${d}T17:28`,
     },
