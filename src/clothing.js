@@ -33,7 +33,7 @@ export function dressBandLabel(band) {
   if (band <= 10) return "極度禦寒";
   if (band <= 20) return "羽絨級防寒";
   if (band <= 30) return "厚外套防寒";
-  if (band <= 40) return "有裡襯外套";
+  if (band <= 40) return "建議穿外套";
   if (band <= 50) return "可穿薄外套";
   if (band <= 60) return "長袖舒適";
   if (band <= 70) return "短袖可加外套";
