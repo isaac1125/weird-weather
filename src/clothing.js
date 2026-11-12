@@ -33,8 +33,8 @@ export function dressBandLabel(band) {
   if (band <= 10) return "極度禦寒";
   if (band <= 20) return "羽絨級防寒";
   if (band <= 30) return "厚外套防寒";
-  if (band <= 40) return "有裡外套";
-  if (band <= 50) return "薄外套調節";
+  if (band <= 40) return "建議穿外套";
+  if (band <= 50) return "可穿薄外套";
   if (band <= 60) return "長袖舒適";
   if (band <= 70) return "短袖可加外套";
   if (band <= 80) return "短袖即可";
@@ -188,13 +188,13 @@ export function swingCopy({ swing, clothes, isNight = false, band }) {
 
   if (delta >= 8) {
     return isNight
-      ? `早晚差 ${delta}°，晚上記得加 ${outer?.label || "外套"}`
-      : `早晚差 ${delta}°，建議 ${outfit}，早晚好脫`;
+      ? `早晚差 ${delta}°，晚間偏涼，記得加 ${outer?.label || "外套"}`
+      : `早晚差 ${delta}°，早晚較冷，建議 ${outfit}`;
   }
   if (delta >= 5) {
     return isNight
-      ? `日夜溫差約 ${delta}°，夜間偏涼，維持 ${outfit}`
-      : `日夜溫差約 ${delta}°，建議 ${outfit}`;
+      ? `日夜溫差約 ${delta}°，夜間偏涼，建議 ${outfit}`
+      : `日夜溫差約 ${delta}°，早晚偏涼，建議 ${outfit}`;
   }
   if (bandHint && band <= 40) {
     return isNight

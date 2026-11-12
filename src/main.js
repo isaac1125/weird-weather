@@ -129,8 +129,8 @@ function renderOutfit(periodKey) {
   `;
 
   els.periodPeek.textContent = night
-    ? `白天可改：${otherAdvice.headline}`
-    : `晚上可改：${otherAdvice.headline}`;
+    ? `白天建議：${otherAdvice.headline}`
+    : `晚上建議：${otherAdvice.headline}`;
 
   const cues = [
     {
