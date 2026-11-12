@@ -139,37 +139,28 @@ function renderOutfit(periodKey) {
     ? `白天可改：${otherAdvice.headline}`
     : `晚上可改：${otherAdvice.headline}`;
 
-  const cues = [];
-  if (advice.condition.key !== "stable" || advice.condition.tone !== "good") {
-    cues.push({
+  const cues = [
+    {
       label: advice.condition.label,
       tone: advice.condition.tone === "warn" ? "cool" : advice.condition.tone,
       svg: conditionGlyph(advice.condition.key),
-    });
-  } else if (period.popPct >= 20) {
-    cues.push({
-      label: advice.condition.label,
-      tone: "good",
-      svg: conditionGlyph(advice.condition.key),
-    });
-  }
-
-  const lifeCue = night
-    ? {
-        label: advice.exercise.label,
-        tone: advice.exercise.tone === "warn" ? "warm" : advice.exercise.tone,
-        svg: iconRun(),
-        badge: advice.exercise.ok ? "✓" : "!",
-        badgeNo: !advice.exercise.ok,
-      }
-    : {
-        label: advice.laundry.label,
-        tone: advice.laundry.tone,
-        svg: iconLaundry(),
-        badge: advice.laundry.ok ? "✓" : "!",
-        badgeNo: !advice.laundry.ok,
-      };
-  cues.push(lifeCue);
+    },
+    night
+      ? {
+          label: advice.exercise.label,
+          tone: advice.exercise.tone === "warn" ? "warm" : advice.exercise.tone,
+          svg: iconRun(),
+          badge: advice.exercise.ok ? "✓" : "!",
+          badgeNo: !advice.exercise.ok,
+        }
+      : {
+          label: advice.laundry.label,
+          tone: advice.laundry.tone,
+          svg: iconLaundry(),
+          badge: advice.laundry.ok ? "✓" : "!",
+          badgeNo: !advice.laundry.ok,
+        },
+  ];
 
   els.cues.innerHTML = cues
     .slice(0, 2)

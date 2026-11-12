@@ -34,14 +34,10 @@ export function outfitForTemps(low, high) {
     }
   } else if (avg < 22 && swing >= 6) {
     layers.push({ key: "light", label: "薄外套", tone: "cool" });
-  } else if (avg >= 26 && low >= 24) {
+  } else if (avg >= 26 || (avg >= 24 && low >= 22)) {
     layers.push({ key: "breathable", label: "透氣衣", tone: "warm" });
-  } else if (layers.length === 1) {
-    if (avg >= 24) {
-      layers.push({ key: "tee2", label: "短袖內搭", tone: "warm" });
-    } else {
-      layers.push({ key: "cardigan", label: "薄外套", tone: "cool" });
-    }
+  } else if (layers.length === 1 && avg < 24) {
+    layers.push({ key: "cardigan", label: "薄外套", tone: "cool" });
   }
 
   return layers.slice(0, 2);
