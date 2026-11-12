@@ -221,6 +221,15 @@ function closePlaceSheet() {
   document.body.classList.remove("sheet-open");
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function renderPlaceList(places) {
   if (!places.length) {
     els.list.innerHTML =
@@ -228,21 +237,22 @@ function renderPlaceList(places) {
     return;
   }
   els.list.innerHTML = places
-    .map(
-      (place) => `
+    .map((place) => {
+      const name = escapeHtml(place.name);
+      return `
       <li>
         <button
           type="button"
           class="place-list__item"
           role="option"
-          data-name="${place.name}"
-          data-lat="${place.latitude}"
-          data-lon="${place.longitude}"
+          data-name="${name}"
+          data-lat="${Number(place.latitude)}"
+          data-lon="${Number(place.longitude)}"
         >
-          ${place.name}
+          ${name}
         </button>
-      </li>`
-    )
+      </li>`;
+    })
     .join("");
 }
 
