@@ -28,17 +28,17 @@ npm run preview
 - **地區選擇**：可搜尋台灣縣市行政區，或選用目前定位；最後選擇會存在 `localStorage`
 - **彩色圖示**：天氣／穿搭／生活建議圖示使用 Twemoji 彩色透明 PNG
 
-## 穿搭圖示對應（Twemoji）
+## 穿搭圖示對應
 
-| key | 標籤 | Twemoji | code |
+| key | 標籤 | 圖示 | 來源 |
 | --- | --- | --- | --- |
-| `thermal` | 發熱衣 | 🧣 | `1f9e3` |
-| `tee` / `breathable` | 短袖／透氣衣 | 👕 | `1f455` |
-| `long` | 薄長袖 | 👚 | `1f45a` |
-| `thick` | 厚長袖 | 👔 | `1f454` |
-| `jacket` / `light` / `cardigan` | 薄外套 | 🥼 | `1f97c` |
-| `padded` | 棉外套 | 🧥 | `1f9e5` |
-| `down` | 羽絨外套 | 🧥＋❄️ | `1f9e5` + `2744` badge |
+| `thermal` | 發熱衣 | 貼身發熱衣 SVG | 自製 |
+| `tee` / `breathable` | 短袖／透氣衣 | 👕 | Twemoji `1f455` |
+| `long` | 薄長袖 | 👚 | Twemoji `1f45a` |
+| `thick` | 厚長袖 | 厚實圓領上衣 SVG | 自製 |
+| `jacket` / `light` / `cardigan` | 薄外套 | 🥼 | Twemoji `1f97c` |
+| `padded` | 棉外套 | 🧥 | Twemoji `1f9e5` |
+| `down` | 羽絨外套 | 🧥＋❄️ | Twemoji `1f9e5` + `2744` badge |
 
 ## 資料
 

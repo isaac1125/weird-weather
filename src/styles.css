@@ -398,7 +398,7 @@ body[data-period="night"] .status-chip {
 
 .outfit-layer__label {
   margin: 0;
-  font-size: 0.86rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--ink-soft);
 }
@@ -413,20 +413,20 @@ body[data-period="night"] .status-chip {
   animation: pop-in 0.55s ease 0.12s both;
 }
 
-.outfit-hero__title {
-  position: relative;
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: clamp(1.55rem, 6.2vw, 2.2rem);
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  text-wrap: balance;
+.outfit-layer__glyph .clothing-svg {
+  width: 56px;
+  height: 56px;
+  display: block;
+}
+
+.outfit-stack__layers[data-count="3"] .outfit-layer__glyph .clothing-svg {
+  width: 48px;
+  height: 48px;
 }
 
 .outfit-hero__reason {
   position: relative;
-  margin: 10px auto 0;
+  margin: 14px auto 0;
   max-width: 22rem;
   color: var(--ink-soft);
   font-size: 0.98rem;

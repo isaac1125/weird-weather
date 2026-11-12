@@ -102,6 +102,7 @@ function renderOutfit(periodKey) {
   els.periodHigh.textContent = String(period.high);
   els.periodRain.textContent = String(period.popPct);
 
+  // Headline lives under icons only; keep a11y text on the hidden h1.
   els.outfitTitle.textContent = advice.headline;
   els.outfitReason.textContent = advice.reason;
 
