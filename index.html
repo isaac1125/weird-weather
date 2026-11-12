@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#7eb8d4" />
+    <meta
+      name="description"
+      content="Weird Weather — 為台灣日夜溫差設計的穿搭天氣建議"
+    />
+    <title>Weird Weather</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="sky" aria-hidden="true">
+      <div class="sky__glow sky__glow--a"></div>
+      <div class="sky__glow sky__glow--b"></div>
+      <div class="sky__haze"></div>
+    </div>
+
+    <div id="app" class="app">
+      <header class="topbar">
+        <p class="brand">Weird Weather</p>
+        <div class="location" id="location">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z"
+            />
+            <circle
+              cx="12"
+              cy="10"
+              r="2.4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.8"
+            />
+          </svg>
+          <span id="place-name">定位中…</span>
+        </div>
+        <p class="status-chip" id="data-status">讀取天氣</p>
+      </header>
+
+      <main class="main">
+        <section class="hero-metrics" aria-label="目前天氣與空氣品質">
+          <div class="metric metric--temp">
+            <p class="metric__label">現在天氣</p>
+            <p class="metric__value">
+              <span id="current-temp">--</span><span class="unit">°</span>
+            </p>
+            <p class="metric__sub">
+              體感 <span id="feels-like">--</span>°
+            </p>
+          </div>
+          <div class="metric metric--aqi">
+            <p class="metric__label">空氣品質</p>
+            <p class="metric__value metric__value--sm">
+              <span id="aqi-value">--</span>
+            </p>
+            <p class="metric__sub">
+              <span class="pill" id="aqi-label">—</span>
+              PM2.5 <span id="pm25-value">--</span>
+            </p>
+          </div>
+        </section>
+
+        <section class="period" aria-label="白天與夜間穿搭建議">
+          <div class="period__tabs" role="tablist">
+            <button
+              class="period__tab is-active"
+              role="tab"
+              aria-selected="true"
+              data-period="day"
+              id="tab-day"
+            >
+              今天白天
+            </button>
+            <button
+              class="period__tab"
+              role="tab"
+              aria-selected="false"
+              data-period="night"
+              id="tab-night"
+            >
+              今天晚上
+            </button>
+          </div>
+
+          <div class="period__panel" id="period-panel">
+            <div class="period__weather">
+              <div class="period__icon" id="period-icon" aria-hidden="true"></div>
+              <div class="period__meta">
+                <p class="period__range">
+                  <span id="period-low">--</span>° ~
+                  <span id="period-high">--</span>°
+                </p>
+                <p class="period__desc" id="period-desc">—</p>
+              </div>
+              <div class="rain-badge" title="降雨機率">
+                <span id="period-rain">--</span>%
+              </div>
+            </div>
+
+            <div class="advice" id="advice-row" aria-label="穿搭與生活建議"></div>
+          </div>
+        </section>
+
+        <section class="hourly" aria-label="三小時預報">
+          <div class="section-head">
+            <h2>三小時預報</h2>
+            <p>氣溫走勢與降雨機率</p>
+          </div>
+          <div class="hourly__scroll" id="hourly-list"></div>
+        </section>
+      </main>
+
+      <footer class="foot">
+        <p>資料來源 Open-Meteo · 台灣日夜溫差穿搭助手</p>
+      </footer>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
