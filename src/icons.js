@@ -39,11 +39,68 @@ export function iconThunder() {
 }
 
 export function iconShirt() {
-  return emojiImg("1f455", "上衣");
+  return emojiImg("1f455", "短袖");
+}
+
+export function iconBlouse() {
+  return emojiImg("1f45a", "薄長袖");
+}
+
+export function iconThickTop() {
+  return emojiImg("1f454", "厚長袖");
+}
+
+/** Warmth stand-in for 發熱衣 (no dedicated thermal emoji). */
+export function iconThermal() {
+  return emojiImg("1f9e3", "發熱衣");
+}
+
+/** Light outer / 薄外套 — lab coat Twemoji as a distinct light layer. */
+export function iconLightOuter() {
+  return emojiImg("1f97c", "薄外套");
 }
 
 export function iconJacket() {
-  return emojiImg("1f9e5", "外套");
+  return emojiImg("1f9e5", "棉外套");
+}
+
+/** 羽絨外套 — coat glyph with frost badge for visual distinction. */
+export function iconDown() {
+  return `${emojiImg("1f9e5", "羽絨外套")}<span class="emoji-badge" aria-hidden="true">${emojiImg("2744", "")}</span>`;
+}
+
+/**
+ * Map clothing engine keys → Twemoji (CC-BY 4.0).
+ * thermal  發熱衣   → 🧣 1f9e3
+ * tee      短袖     → 👕 1f455
+ * breathable 透氣衣 → 👕 1f455
+ * long     薄長袖   → 👚 1f45a
+ * thick    厚長袖   → 👔 1f454
+ * jacket / light / cardigan 薄外套 → 🥼 1f97c
+ * padded   棉外套   → 🧥 1f9e5
+ * down     羽絨外套 → 🧥 1f9e5 + ❄️ 2744 badge
+ */
+export function clothingIcon(key) {
+  switch (key) {
+    case "thermal":
+      return iconThermal();
+    case "long":
+      return iconBlouse();
+    case "thick":
+      return iconThickTop();
+    case "jacket":
+    case "light":
+    case "cardigan":
+      return iconLightOuter();
+    case "padded":
+      return iconJacket();
+    case "down":
+      return iconDown();
+    case "tee":
+    case "breathable":
+    default:
+      return iconShirt();
+  }
 }
 
 export function iconUmbrella() {

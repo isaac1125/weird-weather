@@ -1,10 +1,9 @@
 import { buildAdviceRow } from "./clothing.js";
 import {
-  iconJacket,
+  clothingIcon,
   iconLaundry,
   iconPin,
   iconRun,
-  iconShirt,
   iconStable,
   iconUmbrella,
   iconWind,
@@ -61,13 +60,6 @@ let state = {
 let searchTimer = null;
 let searchToken = 0;
 
-function clothingGlyph(key) {
-  if (key === "padded" || key === "jacket" || key === "light" || key === "cardigan") {
-    return iconJacket();
-  }
-  return iconShirt();
-}
-
 function conditionGlyph(key) {
   if (key === "wind" || key === "calm") return iconWind();
   if (key === "stable" || key === "dry") return iconStable();
@@ -116,8 +108,8 @@ function renderOutfit(periodKey) {
   const layers = advice.clothes
     .map(
       (c, index) => `
-      <div class="outfit-layer" data-tone="${c.tone}" style="--i:${index}">
-        <div class="outfit-layer__glyph">${clothingGlyph(c.key)}</div>
+      <div class="outfit-layer" data-tone="${c.tone}" data-role="${c.role || ""}" style="--i:${index}">
+        <div class="outfit-layer__glyph">${clothingIcon(c.key)}</div>
         <p class="outfit-layer__label">${c.label}</p>
       </div>
       ${
@@ -132,7 +124,7 @@ function renderOutfit(periodKey) {
     <div class="outfit-stack__weather" aria-hidden="true">
       ${weatherIcon(period.weatherCode, { night })}
     </div>
-    <div class="outfit-stack__layers">${layers}</div>
+    <div class="outfit-stack__layers" data-count="${advice.clothes.length}">${layers}</div>
   `;
 
   els.periodPeek.textContent = night
@@ -339,6 +331,47 @@ document.addEventListener("keydown", (event) => {
 async function boot() {
   els.locationPin.innerHTML = iconPin();
   els.geoIcon.innerHTML = iconPin();
+
+  // Dev/demo: ?demo=cold forces sample cold night stack (發熱衣＋厚長袖＋棉外套)
+  const demo = new URLSearchParams(location.search).get("demo");
+  if (demo === "cold") {
+    state.bundle = sampleBundle();
+    state.period = "night";
+    document.body.dataset.period = "night";
+    renderMetrics();
+    renderOutfit("night");
+    renderHourly();
+    els.status.textContent = "示範資料（冷天預覽）";
+    return;
+  }
+  if (demo === "freezing") {
+    state.bundle = sampleBundle();
+    state.bundle.day = {
+      low: 2,
+      high: 8,
+      popPct: 10,
+      windKmh: 25,
+      weatherCode: 2,
+      aqi: 40,
+    };
+    state.bundle.night = {
+      low: 1,
+      high: 5,
+      popPct: 20,
+      windKmh: 28,
+      weatherCode: 3,
+      aqi: 40,
+    };
+    state.bundle.daily = { ...state.bundle.daily, high: 8, low: 1, swing: 7 };
+    state.period = "night";
+    document.body.dataset.period = "night";
+    renderMetrics();
+    renderOutfit("night");
+    renderHourly();
+    els.status.textContent = "示範資料（羽絨預覽）";
+    return;
+  }
+
   renderAll();
 
   const saved = loadSavedPlace();

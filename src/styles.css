@@ -311,6 +311,26 @@ body[data-period="night"] .status-chip {
   padding-top: 8px;
 }
 
+.outfit-stack__layers[data-count="3"] {
+  gap: 2px;
+}
+
+.outfit-stack__layers[data-count="3"] .outfit-layer__glyph {
+  width: 76px;
+  height: 76px;
+  border-radius: 24px;
+}
+
+.outfit-stack__layers[data-count="3"] .outfit-layer__glyph .emoji-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.outfit-stack__layers[data-count="3"] .outfit-plus {
+  font-size: 1.35rem;
+  padding-bottom: 24px;
+}
+
 .outfit-layer {
   display: flex;
   flex-direction: column;
@@ -332,6 +352,7 @@ body[data-period="night"] .status-chip {
 }
 
 .outfit-layer__glyph {
+  position: relative;
   width: 88px;
   height: 88px;
   border-radius: 28px;
@@ -343,6 +364,28 @@ body[data-period="night"] .status-chip {
 .outfit-layer__glyph .emoji-icon {
   width: 56px;
   height: 56px;
+}
+
+.outfit-layer__glyph .emoji-badge {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 4px rgba(47, 74, 95, 0.18);
+}
+
+.outfit-layer__glyph .emoji-badge .emoji-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.outfit-layer[data-role="inner"] .outfit-layer__glyph {
+  background: rgba(196, 112, 86, 0.14);
 }
 
 .outfit-layer[data-tone="warm"] .outfit-layer__glyph {
@@ -374,10 +417,11 @@ body[data-period="night"] .status-chip {
   position: relative;
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.85rem, 7vw, 2.35rem);
-  line-height: 1.15;
+  font-size: clamp(1.55rem, 6.2vw, 2.2rem);
+  line-height: 1.2;
   font-weight: 700;
   letter-spacing: 0.01em;
+  text-wrap: balance;
 }
 
 .outfit-hero__reason {
