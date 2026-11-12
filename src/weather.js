@@ -108,7 +108,17 @@ export async function reverseGeocode(lat, lon) {
       ? data.locality
       : data.localityInfo?.administrative?.find((a) => a.adminLevel >= 6)?.name ||
         "";
-  const parts = [city, district].filter(Boolean);
+  const parts = [city, district]
+    .filter(Boolean)
+    .map((p) =>
+      String(p)
+        .replace(/台/g, "臺")
+        .replace(/湾/g, "灣")
+        .replace(/[台臺]灣省/g, "")
+        .replace(/中國?臺[北灣]/g, "")
+        .replace(/\s+/g, "")
+    )
+    .filter((p) => p && !/^[台臺]灣省$/.test(p));
   const unique = [...new Set(parts)];
   const label = unique.join("");
   return label || FALLBACK_PLACE.name;

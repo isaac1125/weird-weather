@@ -128,6 +128,94 @@ function normalize(text) {
     .replace(/\s+/g, "");
 }
 
+/** Map occasional English admin2 from Open-Meteo to Traditional Chinese. */
+const EN_ADMIN2 = {
+  changhua: "彰化縣",
+  nantou: "南投縣",
+  yunlin: "雲林縣",
+  chiayi: "嘉義縣",
+  pingtung: "屏東縣",
+  yilan: "宜蘭縣",
+  hualien: "花蓮縣",
+  taitung: "臺東縣",
+  miaoli: "苗栗縣",
+  hsinchu: "新竹縣",
+  penghu: "澎湖縣",
+  kinmen: "金門縣",
+  lienchiang: "連江縣",
+  taipei: "臺北市",
+  "new taipei": "新北市",
+  taoyuan: "桃園市",
+  taichung: "臺中市",
+  tainan: "臺南市",
+  kaohsiung: "高雄市",
+  keelung: "基隆市",
+};
+
+/** Open-Meteo often labels counties under "臺灣省 or 台湾省" / "中国台北" — drop those. */
+function isNoiseAdminLabel(text) {
+  const t = String(text || "").trim();
+  if (!t) return true;
+  if (/\bor\b/i.test(t)) return true;
+  if (/[台臺]灣省/.test(t)) return true;
+  if (/中國?台[北灣]|中国台[北湾]/.test(t)) return true;
+  return false;
+}
+
+function localizeAdminLabel(text) {
+  const t = String(text || "").trim();
+  if (!t) return "";
+  if (/^[\x00-\x7F]+$/.test(t)) {
+    return EN_ADMIN2[t.toLowerCase()] || "";
+  }
+  return t;
+}
+
+function toTraditionalLabel(text) {
+  return String(text || "")
+    .replace(/台/g, "臺")
+    .replace(/湾/g, "灣")
+    .replace(/\s+/g, "");
+}
+
+/**
+ * Build a Taiwan place label without province noise.
+ * Prefer 縣市 + 鄉鎮市區 (admin2 + admin3).
+ */
+export function formatTaiwanPlaceName(result) {
+  const candidates = [];
+  for (const key of ["admin1", "admin2", "admin3"]) {
+    const raw = result?.[key];
+    if (!raw || isNoiseAdminLabel(raw)) continue;
+    const localized = localizeAdminLabel(raw);
+    if (!localized) continue;
+    candidates.push(toTraditionalLabel(localized));
+  }
+  const placeName = toTraditionalLabel(result?.name || "");
+  if (
+    placeName &&
+    !candidates.some(
+      (p) => p === placeName || p.includes(placeName) || placeName.includes(p)
+    )
+  ) {
+    candidates.push(placeName);
+  }
+
+  const unique = [];
+  for (const part of candidates) {
+    if (!part || unique.includes(part)) continue;
+    // Skip if this part is already fully contained in a previous part
+    if (unique.some((u) => u.includes(part))) continue;
+    unique.push(part);
+  }
+
+  let label = unique.join("");
+  label = label
+    .replace(/[台臺]灣省/g, "")
+    .replace(/中國?臺[北灣]/g, "");
+  return label || placeName || "臺灣";
+}
+
 export function loadSavedPlace() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -139,6 +227,11 @@ export function loadSavedPlace() {
       typeof place.latitude === "number" &&
       typeof place.longitude === "number"
     ) {
+      // Clean older saves that still contain Open-Meteo province noise
+      place.name = toTraditionalLabel(place.name)
+        .replace(/[台臺]灣省(?:\s*or\s*[台臺]湾省)?/gi, "")
+        .replace(/[台臺]湾省/g, "")
+        .replace(/中國?臺[北灣]/g, "");
       return place;
     }
   } catch {
@@ -191,15 +284,11 @@ export async function searchPlaces(query, limit = 12) {
     const data = await res.json();
     const remote = (data.results || [])
       .filter((r) => r.country_code === "TW" || r.country === "Taiwan")
-      .map((r) => {
-        const parts = [r.admin1, r.admin2, r.name].filter(Boolean);
-        const unique = [...new Set(parts.map((p) => p.replace(/台/g, "臺")))];
-        return {
-          name: unique.join("") || r.name,
-          latitude: r.latitude,
-          longitude: r.longitude,
-        };
-      });
+      .map((r) => ({
+        name: formatTaiwanPlaceName(r),
+        latitude: r.latitude,
+        longitude: r.longitude,
+      }));
 
     const seen = new Set();
     const merged = [];
