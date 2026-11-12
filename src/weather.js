@@ -69,12 +69,10 @@ function parseTaipeiLocal(iso) {
   return new Date(`${normalized}+08:00`);
 }
 
-function buildHourlyBrief(hourly, limit = 6) {
+function buildHourlyBrief(hourly, limit = 12) {
   const now = Date.now();
   const items = [];
   for (let i = 0; i < hourly.time.length; i++) {
-    const hour = Number(hourly.time[i].slice(11, 13));
-    if (hour % 3 !== 0) continue;
     const t = parseTaipeiLocal(hourly.time[i]).getTime();
     if (t + 60 * 60 * 1000 < now) continue;
     items.push({
@@ -204,15 +202,13 @@ export function sampleBundle() {
   const now = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   const hours = [];
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getTime() + i * 3 * 3600 * 1000);
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getTime() + i * 3600 * 1000);
     const h = d.getHours();
     const temp =
       h < 6 ? 15 : h < 10 ? 18 : h < 15 ? 23 : h < 19 ? 20 : 16;
     hours.push({
-      time: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(
-        Math.floor(h / 3) * 3
-      )}:00`,
+      time: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(h)}:00`,
       temp,
       pop: h >= 18 ? 40 : 10,
       code: h >= 18 ? 61 : 2,
