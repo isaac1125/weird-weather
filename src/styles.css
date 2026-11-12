@@ -133,13 +133,43 @@ button {
   justify-content: center;
   gap: 6px;
   margin: 0 auto;
+  padding: 4px 10px;
+  border-radius: 999px;
   color: var(--ink-soft);
   font-weight: 500;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-.location .icon {
-  width: 16px;
-  height: 16px;
+.location:hover,
+.location:focus-visible {
+  background: rgba(255, 252, 248, 0.55);
+  color: var(--ink);
+  outline: none;
+}
+
+.location__pin {
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+}
+
+.location__pin .emoji-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.location__chevron {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.emoji-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
 }
 
 .status-chip {
@@ -275,7 +305,7 @@ button {
   place-items: center;
 }
 
-.period__icon svg {
+.period__icon .emoji-icon {
   width: 58px;
   height: 58px;
 }
@@ -333,9 +363,9 @@ button {
   color: var(--sky-deep);
 }
 
-.advice__glyph svg {
-  width: 24px;
-  height: 24px;
+.advice__glyph .emoji-icon {
+  width: 28px;
+  height: 28px;
 }
 
 .advice__glyph[data-tone="warm"] {
@@ -438,7 +468,14 @@ button {
   font-weight: 500;
 }
 
-.hour__icon svg {
+.hour__icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+}
+
+.hour__icon .emoji-icon {
   width: 28px;
   height: 28px;
 }
@@ -464,6 +501,206 @@ button {
 
 .foot p {
   margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+body.sheet-open {
+  overflow: hidden;
+}
+
+.place-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  align-items: end;
+  justify-items: center;
+}
+
+.place-sheet[hidden] {
+  display: none;
+}
+
+.place-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(28, 39, 51, 0.35);
+  backdrop-filter: blur(2px);
+  animation: fade-in 0.2s ease both;
+}
+
+.place-sheet__panel {
+  position: relative;
+  width: min(100%, 440px);
+  max-height: min(78dvh, 620px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  background: var(--paper-strong);
+  box-shadow: 0 -12px 40px rgba(47, 74, 96, 0.18);
+  animation: sheet-up 0.28s ease both;
+}
+
+.place-sheet__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.place-sheet__head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.place-sheet__close {
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.place-sheet__close:hover,
+.place-sheet__close:focus-visible {
+  background: rgba(126, 184, 212, 0.16);
+  outline: none;
+}
+
+.place-geo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(126, 184, 212, 0.16);
+  text-align: left;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.place-geo:hover:not(:disabled),
+.place-geo:focus-visible:not(:disabled) {
+  background: rgba(126, 184, 212, 0.26);
+  outline: none;
+}
+
+.place-geo:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.place-geo__icon {
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+
+.place-geo__icon .emoji-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.place-geo__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.place-geo__text strong {
+  font-weight: 700;
+}
+
+.place-geo__text small {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.place-search input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.place-search input:focus {
+  outline: 2px solid rgba(63, 126, 163, 0.35);
+  outline-offset: 1px;
+}
+
+.place-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: #fff;
+  min-height: 160px;
+}
+
+.place-list__item {
+  display: block;
+  width: 100%;
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  transition: background 0.15s ease;
+}
+
+.place-list li:last-child .place-list__item {
+  border-bottom: 0;
+}
+
+.place-list__item:hover,
+.place-list__item:focus-visible {
+  background: rgba(126, 184, 212, 0.14);
+  outline: none;
+}
+
+.place-list__empty {
+  padding: 24px 14px;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes rise {

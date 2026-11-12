@@ -14,6 +14,7 @@
     <title>Weird Weather</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Noto+Sans+TC:wght@400;500;600;700&display=swap"
       rel="stylesheet"
@@ -30,27 +31,18 @@
     <div id="app" class="app">
       <header class="topbar">
         <p class="brand">Weird Weather</p>
-        <div class="location" id="location">
-          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              d="M12 21s7-5.4 7-11a7 7 0 1 0-14 0c0 5.6 7 11 7 11Z"
-            />
-            <circle
-              cx="12"
-              cy="10"
-              r="2.4"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-            />
-          </svg>
-          <span id="place-name">定位中…</span>
-        </div>
+        <button
+          type="button"
+          class="location"
+          id="location-btn"
+          aria-haspopup="dialog"
+          aria-controls="place-sheet"
+          aria-expanded="false"
+        >
+          <span class="location__pin" id="location-pin" aria-hidden="true"></span>
+          <span id="place-name">選擇地區…</span>
+          <span class="location__chevron" aria-hidden="true">▾</span>
+        </button>
         <p class="status-chip" id="data-status">讀取天氣</p>
       </header>
 
@@ -128,8 +120,50 @@
       </main>
 
       <footer class="foot">
-        <p>資料來源 Open-Meteo · 台灣日夜溫差穿搭助手</p>
+        <p>資料來源 Open-Meteo · 圖示 Twemoji · 台灣日夜溫差穿搭助手</p>
       </footer>
+    </div>
+
+    <div
+      class="place-sheet"
+      id="place-sheet"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="place-sheet-title"
+      hidden
+    >
+      <button
+        type="button"
+        class="place-sheet__backdrop"
+        id="place-backdrop"
+        aria-label="關閉地區選擇"
+      ></button>
+      <div class="place-sheet__panel">
+        <div class="place-sheet__head">
+          <h2 id="place-sheet-title">選擇地區</h2>
+          <button type="button" class="place-sheet__close" id="place-close">
+            關閉
+          </button>
+        </div>
+        <button type="button" class="place-geo" id="place-geo">
+          <span class="place-geo__icon" id="place-geo-icon" aria-hidden="true"></span>
+          <span class="place-geo__text">
+            <strong>使用目前位置</strong>
+            <small>需要瀏覽器定位權限</small>
+          </span>
+        </button>
+        <label class="place-search">
+          <span class="visually-hidden">搜尋縣市或行政區</span>
+          <input
+            type="search"
+            id="place-search"
+            placeholder="搜尋縣市、行政區…"
+            autocomplete="off"
+            enterkeyhint="search"
+          />
+        </label>
+        <ul class="place-list" id="place-list" role="listbox" aria-label="地區清單"></ul>
+      </div>
     </div>
 
     <script type="module" src="/src/main.js"></script>
