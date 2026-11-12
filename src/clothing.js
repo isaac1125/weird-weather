@@ -174,34 +174,53 @@ export function outfitHeadline(clothes) {
 }
 
 /**
- * One short human line for diurnal swing + layering tip.
- * Prefer full-day swing when provided; else fall back to the active period.
+ * Short tip under the outfit icons.
+ * Headline already lists the full stack — reason only names the *extra*
+ * layer to add for cooler mornings/evenings (e.g. 建議多加薄外套).
  */
+const COOL_OUTER_KEYS = new Set([
+  "jacket",
+  "light",
+  "cardigan",
+  "padded",
+  "down",
+]);
+
 export function swingCopy({ swing, clothes, isNight = false, band }) {
   const delta = clamp(Math.round(swing), 0, 40);
-  const outfit = outfitHeadline(clothes);
-  const outer =
-    [...clothes].reverse().find((c) => c.role === "outer") ||
-    clothes[clothes.length - 1];
-  const bandHint =
-    typeof band === "number" ? dressBandLabel(band) : null;
+  // Only name a removable cool outer — not 透氣衣 / mid tops (headline already lists the stack).
+  const extra =
+    [...clothes]
+      .reverse()
+      .find((c) => c.role === "outer" && COOL_OUTER_KEYS.has(c.key)) || null;
+  const add = extra?.label;
 
   if (delta >= 8) {
+    if (add) {
+      return isNight
+        ? `早晚差 ${delta}°，晚間偏涼，建議多加${add}`
+        : `早晚差 ${delta}°，早晚較冷，建議多加${add}`;
+    }
     return isNight
-      ? `早晚差 ${delta}°，晚間偏涼，記得加 ${outer?.label || "外套"}`
-      : `早晚差 ${delta}°，早晚較冷，建議 ${outfit}`;
+      ? `早晚差 ${delta}°，晚間偏涼`
+      : `早晚差 ${delta}°，早晚較冷`;
   }
   if (delta >= 5) {
+    if (add) {
+      return isNight
+        ? `日夜溫差約 ${delta}°，夜間偏涼，建議多加${add}`
+        : `日夜溫差約 ${delta}°，早晚偏涼，建議多加${add}`;
+    }
     return isNight
-      ? `日夜溫差約 ${delta}°，夜間偏涼，建議 ${outfit}`
-      : `日夜溫差約 ${delta}°，早晚偏涼，建議 ${outfit}`;
+      ? `日夜溫差約 ${delta}°，夜間偏涼`
+      : `日夜溫差約 ${delta}°，早晚偏涼`;
   }
-  if (bandHint && band <= 40) {
+  if (typeof band === "number" && band <= 40 && add) {
     return isNight
-      ? `今晚偏涼（${bandHint}），建議 ${outfit}`
-      : `今天偏涼（${bandHint}），建議 ${outfit}`;
+      ? `今晚偏涼，建議多加${add}`
+      : `今天偏涼，建議多加${add}`;
   }
-  return isNight ? `今晚建議 ${outfit}` : `今天建議 ${outfit}`;
+  return isNight ? `今晚穿著如上即可` : `今天穿著如上即可`;
 }
 
 /**
