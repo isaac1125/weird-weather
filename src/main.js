@@ -2,15 +2,23 @@ import { buildAdviceRow } from "./clothing.js";
 import {
   iconJacket,
   iconLaundry,
+  iconPin,
   iconRun,
   iconShirt,
+  iconStable,
   iconUmbrella,
   iconWind,
   weatherIcon,
   weatherLabel,
 } from "./icons.js";
 import {
-  FALLBACK_PLACE,
+  defaultPlace,
+  loadSavedPlace,
+  savePlace,
+  searchLocalPlaces,
+  searchPlaces,
+} from "./places.js";
+import {
   aqiLabel,
   fetchWeatherBundle,
   getPosition,
@@ -20,6 +28,8 @@ import {
 
 const els = {
   place: document.getElementById("place-name"),
+  locationBtn: document.getElementById("location-btn"),
+  locationPin: document.getElementById("location-pin"),
   status: document.getElementById("data-status"),
   temp: document.getElementById("current-temp"),
   feels: document.getElementById("feels-like"),
@@ -34,13 +44,23 @@ const els = {
   advice: document.getElementById("advice-row"),
   hourly: document.getElementById("hourly-list"),
   tabs: document.querySelectorAll(".period__tab"),
+  sheet: document.getElementById("place-sheet"),
+  backdrop: document.getElementById("place-backdrop"),
+  close: document.getElementById("place-close"),
+  geo: document.getElementById("place-geo"),
+  geoIcon: document.getElementById("place-geo-icon"),
+  search: document.getElementById("place-search"),
+  list: document.getElementById("place-list"),
 };
 
 let state = {
   period: "day",
   bundle: sampleBundle(),
-  placeName: FALLBACK_PLACE.name,
+  place: defaultPlace(),
 };
+
+let searchTimer = null;
+let searchToken = 0;
 
 function clothingGlyph(key) {
   if (key === "padded" || key === "jacket" || key === "light" || key === "cardigan") {
@@ -51,6 +71,7 @@ function clothingGlyph(key) {
 
 function conditionGlyph(key) {
   if (key === "wind" || key === "calm") return iconWind();
+  if (key === "stable" || key === "dry") return iconStable();
   return iconUmbrella();
 }
 
@@ -108,7 +129,6 @@ function renderAdvice(periodKey) {
     },
   ].slice(0, 5);
 
-  // Ensure exactly 5 slots: pad with calm wind if needed
   while (items.length < 5) {
     items.splice(2, 0, {
       label: "風力平穩",
@@ -139,7 +159,8 @@ function renderAdvice(periodKey) {
 function renderHourly() {
   els.hourly.innerHTML = state.bundle.hourly
     .map((h) => {
-      const night = Number(h.time.slice(11, 13)) >= 18 || Number(h.time.slice(11, 13)) < 6;
+      const hour = Number(h.time.slice(11, 13));
+      const night = hour >= 18 || hour < 6;
       return `
       <div class="hour">
         <span class="hour__time">${formatHourLabel(h.time)}</span>
@@ -160,7 +181,7 @@ function renderMetrics() {
   const label = aqiLabel(aqi);
   els.aqiLabel.textContent = label.text;
   els.aqiLabel.dataset.level = label.level === "good" ? "" : label.level;
-  els.place.textContent = state.placeName;
+  els.place.textContent = state.place.name;
   els.status.textContent =
     source === "sample" ? "示範資料（離線備援）" : "即時資料 · Open-Meteo";
 }
@@ -169,6 +190,94 @@ function renderAll() {
   renderMetrics();
   renderAdvice(state.period);
   renderHourly();
+}
+
+function openPlaceSheet() {
+  els.sheet.hidden = false;
+  els.locationBtn.setAttribute("aria-expanded", "true");
+  document.body.classList.add("sheet-open");
+  els.search.value = "";
+  renderPlaceList(searchLocalPlaces("", 14));
+  queueMicrotask(() => els.search.focus());
+}
+
+function closePlaceSheet() {
+  els.sheet.hidden = true;
+  els.locationBtn.setAttribute("aria-expanded", "false");
+  document.body.classList.remove("sheet-open");
+}
+
+function renderPlaceList(places) {
+  if (!places.length) {
+    els.list.innerHTML =
+      '<li class="place-list__empty">找不到符合的地區，試試其他關鍵字</li>';
+    return;
+  }
+  els.list.innerHTML = places
+    .map(
+      (place, index) => `
+      <li>
+        <button
+          type="button"
+          class="place-list__item"
+          role="option"
+          data-index="${index}"
+          data-name="${place.name}"
+          data-lat="${place.latitude}"
+          data-lon="${place.longitude}"
+        >
+          ${place.name}
+        </button>
+      </li>`
+    )
+    .join("");
+}
+
+async function refreshPlaceList(query) {
+  const token = ++searchToken;
+  const places = await searchPlaces(query, 14);
+  if (token !== searchToken) return;
+  renderPlaceList(places);
+}
+
+async function loadWeatherForPlace(place, { persist = true } = {}) {
+  state.place = place;
+  els.place.textContent = place.name;
+  if (persist) savePlace(place);
+
+  try {
+    els.status.textContent = "讀取天氣…";
+    const bundle = await fetchWeatherBundle(place.latitude, place.longitude);
+    state.bundle = bundle;
+    renderAll();
+  } catch (err) {
+    console.warn("weather fallback", err);
+    state.bundle = sampleBundle();
+    renderAll();
+    els.status.textContent = "示範資料（API 備援）";
+  }
+}
+
+async function useGeolocation() {
+  els.status.textContent = "取得定位…";
+  els.geo.disabled = true;
+  try {
+    const pos = await getPosition();
+    const latitude = pos.coords.latitude;
+    const longitude = pos.coords.longitude;
+    let name;
+    try {
+      name = await reverseGeocode(latitude, longitude);
+    } catch {
+      name = `目前位置（${latitude.toFixed(2)}, ${longitude.toFixed(2)}）`;
+    }
+    closePlaceSheet();
+    await loadWeatherForPlace({ name, latitude, longitude });
+  } catch {
+    els.status.textContent = "無法取得定位，請手動選地區";
+  } finally {
+    els.geo.disabled = false;
+  }
 }
 
 els.tabs.forEach((tab) => {
@@ -184,44 +293,55 @@ els.tabs.forEach((tab) => {
   });
 });
 
+els.locationBtn.addEventListener("click", openPlaceSheet);
+els.backdrop.addEventListener("click", closePlaceSheet);
+els.close.addEventListener("click", closePlaceSheet);
+els.geo.addEventListener("click", () => {
+  useGeolocation();
+});
+
+els.search.addEventListener("input", () => {
+  const query = els.search.value.trim();
+  clearTimeout(searchTimer);
+  if (query.length < 2) {
+    renderPlaceList(searchLocalPlaces(query, 14));
+    return;
+  }
+  renderPlaceList(searchLocalPlaces(query, 14));
+  searchTimer = setTimeout(() => refreshPlaceList(query), 220);
+});
+
+els.list.addEventListener("click", (event) => {
+  const btn = event.target.closest(".place-list__item");
+  if (!btn) return;
+  const place = {
+    name: btn.dataset.name,
+    latitude: Number(btn.dataset.lat),
+    longitude: Number(btn.dataset.lon),
+  };
+  closePlaceSheet();
+  loadWeatherForPlace(place);
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !els.sheet.hidden) {
+    closePlaceSheet();
+  }
+});
+
 async function boot() {
+  els.locationPin.innerHTML = iconPin();
+  els.geoIcon.innerHTML = iconPin();
   renderAll();
-  let lat = FALLBACK_PLACE.latitude;
-  let lon = FALLBACK_PLACE.longitude;
-  let place = FALLBACK_PLACE.name;
-  let usedGeo = false;
 
-  try {
-    els.status.textContent = "取得定位…";
-    const pos = await getPosition();
-    lat = pos.coords.latitude;
-    lon = pos.coords.longitude;
-    usedGeo = true;
-    try {
-      place = await reverseGeocode(lat, lon);
-    } catch {
-      place = `目前位置（${lat.toFixed(2)}, ${lon.toFixed(2)}）`;
-    }
-  } catch {
-    place = FALLBACK_PLACE.name;
-    els.status.textContent = "改用臺北大安";
+  const saved = loadSavedPlace();
+  if (saved) {
+    await loadWeatherForPlace(saved, { persist: false });
+    return;
   }
 
-  state.placeName = place;
-  els.place.textContent = place;
-
-  try {
-    els.status.textContent = "讀取天氣…";
-    const bundle = await fetchWeatherBundle(lat, lon);
-    state.bundle = bundle;
-    renderAll();
-  } catch (err) {
-    console.warn("weather fallback", err);
-    state.bundle = sampleBundle();
-    state.placeName = usedGeo ? place : FALLBACK_PLACE.name;
-    renderAll();
-    els.status.textContent = "示範資料（API 備援）";
-  }
+  // First visit: default Taipei Da'an; geolocation is opt-in via the picker.
+  await loadWeatherForPlace(defaultPlace());
 }
 
 boot();
